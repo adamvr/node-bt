@@ -150,6 +150,22 @@ Connection.prototype.parseHandshake = function (data) {
   return pos;
 };
 
+Connection.prototype.choke = function () {
+  this.push(new Buffer([1, 0]));
+};
+
+Connection.prototype.unchoke = function () {
+  this.push(new Buffer([1, 1]));
+};
+
+Connection.prototype.interested = function () {
+  this.push(new Buffer([1, 2]));
+};
+
+Connection.prototype.uninterested = function () {
+  this.push(new Buffer([1, 3]));
+};
+
 Connection.prototype.handshake = function () {
   var protocolName = 'BitTorrent protocol';
 
