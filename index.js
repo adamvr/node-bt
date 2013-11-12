@@ -120,28 +120,29 @@ Connection.prototype.parseHandshake = function (data) {
   // Parse protocol length
   var length = data[pos++];
 
-  if (pos > len) return 0;
+  if (pos >= len) return -1;
 
   // Parse protocol id
   packet.protocolId = data.slice(pos, pos + length).toString('utf8');
   pos += length;
 
-  if (pos > len) return 0;
+  if (pos >= len) return -1;
 
   // Parse reserved bits
   packet.reserved = data.slice(pos, pos + 8).toString('utf8');
   pos += 8;
 
-  if (pos > len) return 0;
+  if (pos >= len) return -1;
 
   // Parse hash
   packet.hash = data.slice(pos, pos + 20).toString('hex');
-  pos += 8;
+  pos += 20;
 
-  if (pos > len) return 0;
+  if (pos + 20 > len) return -1;
 
   // Parse client id
-  packet.clientId = data.slice(pos).toString('utf8');
+  packet.clientId = data.slice(pos, pos + 20).toString('utf8');
+  pos += 20;
 
   // Emit the packet
   this.emit('handshake', packet);
