@@ -153,15 +153,11 @@ Connection.prototype.parseHandshake = function (data) {
 Connection.prototype.handshake = function () {
   var protocolName = 'BitTorrent protocol';
 
-  // Write protocol
-  this.stream.write(new Buffer([protocolName.length]));
-  this.stream.write(protocolName, 'ascii');
-  // Write reserved bits
-  this.stream.write(new Buffer(8));
-  // Write hash
-  this.stream.write(this.opts.hash, 'hex');
-  // Write client id
-  this.stream.write(this.opts.id, 'ascii');
+  this.push(new Buffer([protocolName.length]));
+  this.push(protocolName, 'utf8');
+  this.push(new Buffer(8));
+  this.push(this.opts.hash, 'hex');
+  this.push(this.opts.id, 'utf8');
 };
 
 var socket = net.connect(51413);
