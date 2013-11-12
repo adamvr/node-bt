@@ -176,10 +176,40 @@ Connection.prototype.handshake = function () {
   this.push(this.opts.id, 'utf8');
 };
 
-var socket = net.connect(51413);
-var client = new Connection(socket, {
-  hash: '1d9e10cad090a293e0c367b56ab963beff0d4eec',
-  id: '-TR9000-' + new Buffer(12).toString('utf8')
-});
+Connection.prototype.bitfield = function (bitfield) {
+  // Convert array bitfield to buffer
+  if (!Buffer.isBuffer(bitfield)) bitfield = arrayToBitfield(bitfield);
 
-client.on('handshake', console.dir);
+  console.log(bitfield.toString('hex'));
+
+  this.push(new Buffer([1 + bitfield.length, 5]));
+  this.push(bitfield);
+};
+
+var arrayToBitfield = function (bitArray) {
+  var fieldLength = Math.ceil(bitArray.length / 8)
+    , field = new Buffer(fieldLength);
+
+  field.fill(0);
+
+  for (var i = 0, len = bitArray.length; i < len; i++) {
+    var byteNum = Math.floor(i / 8)
+      , shift = i % 8;
+
+    field[byteNum] = field[byteNum] | bitArray[i] << (7 - shift);
+  }
+
+  return field;
+};
+
+var bitfieldToArray = function (bitfield) {
+  var bitArray = [];
+  for (var i = 0, len = bitfield.length; i < len; i++) {
+    var byte = bitfield[i];
+    for (var bit = 7; bit + 1; bit--) {
+      bitArray.push(!!(byte & 1 << bit));
+    }
+  }
+
+  return bitArray;
+};
