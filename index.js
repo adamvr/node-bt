@@ -1,41 +1,109 @@
 var net = require('net')
   , util = require('util')
-  , Writable = require('stream').Writable;
+  , Duplex = require('stream').Duplex;
 
-var packetType = [
-  'choke',
-  'unchoke',
-  'interested',
-  'uninterested',
-  'have',
-  'bitfield',
-  'request',
-  'piece',
-  'cancel'
-];
+var packetType = {
+  0: 'choke',
+  1: 'unchoke',
+  2: 'interested',
+  3: 'uninterested',
+  4: 'have',
+  5: 'bitfield',
+  6: 'request',
+  7: 'piece',
+  8: 'cancel'
+};
 
-var Connection = function Connection (stream, opts) {
+var Connection = function Connection (opts) {
   var that = this;
 
   this.opts = opts;
   this.state = 'init';
-  this.stream = stream;
+  this.buffer = null;
 
-  stream.on('connect', function () {
-    that.handshake();
+  this.on('handshake', function () {
+    that.state = 'established';
   });
 
-  stream.pipe(this);
-
-  Writable.call(this);
+  Duplex.call(this);
 };
-util.inherits(Connection, Writable);
+
+util.inherits(Connection, Duplex);
 
 Connection.prototype._write = function (data, encoding, done) {
+  // Concat incoming data with leftover data from last time
+  this.buffer = this.buffer ? Buffer.concat([this.buffer, data]) : data;
+
+  // Parse it
+  this.parse(this.buffer, done);
+};
+
+Connection.prototype.parse = function (data, done) {
+  var read = 0;
+
   if (this.state === 'init') {
-    this.parseHandshake(data);
+    read = this.parseHandshake(data);
+  } else if (this.state === 'established') {
+    read = this.parsePacket(data);
+  }
+
+  // Short write
+  if (read < 0) {
+    this.buffer = data;
+    done();
+  // Long write
+  } else if (read < data.length) {
+    // Remove used data from buffer
+    this.buffer = data.slice(0, read);
+    // Continue parsing
+    // TODO: do on next tick to avoid stack smashing
+    this.parse(this.data, done);
+  } else {
+    // All data used up
+    this.buffer = null;
     done();
   }
+};
+
+Connection.prototype._read = function(size) {
+  // Nothing to do, probably would process a queue here
+};
+
+Connection.prototype.parsePacket = function (data) {
+  var pos = 0
+    , len = data.length
+    , packet = {};
+
+  // Shelve packet until we get at least the length and type
+  if (pos + 2 > len) return -1;
+
+  // Parse packet length
+  var length = data[pos++];
+
+  // Parse packet type
+  packet.type = packetType[data[pos++]];
+
+  // Shelve packet if we haven't got the whole length
+  if (pos + length - 1 > len) return -1;
+
+  // Parse payload
+  this['parse_' + packet.type](packet, data.slice(pos, pos + length));
+  pos += length;
+
+  // Emit the packet
+  this.emit(packet.type, packet);
+
+  return pos;
+};
+
+['choke', 'unchoke', 'interested', 'uninterested'].forEach(function (t) {
+  Connection.prototype['parse_' + t] = function (packet, data) {
+    return;
+  }
+});
+
+Connection.prototype.parse_bitfield = function (packet, payload) {
+  packet.bitfield = bitfieldToArray(payload);
 };
 
 /**
