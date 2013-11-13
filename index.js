@@ -106,6 +106,10 @@ Connection.prototype.parse_bitfield = function (packet, payload) {
   packet.bitfield = bitfieldToArray(payload);
 };
 
+Connection.prototype.parse_have = function (packet, payload) {
+  packet.pieceId = payload.readUInt32BE(0);
+};
+
 /**
  * Connection#parseHandshake - parse a handshake packet
  * @param {Buffer} data - buffer possibly containing handshake
