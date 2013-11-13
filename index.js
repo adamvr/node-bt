@@ -244,14 +244,14 @@ var arrayToBitfield = function (bitArray) {
   return field;
 };
 
-Connection.prototype.request = function (index, begin, length) {
+Connection.prototype.request = function (index, offset, length) {
   // Write header
   this.push(new Buffer([0, 0, 0, 13, 6]));
 
   // Assemble payload
   var payload = new Buffer(12);
   payload.writeUInt32BE(index, 0);
-  payload.writeUInt32BE(begin, 4);
+  payload.writeUInt32BE(offset, 4);
   payload.writeUInt32BE(length, 8);
 
   this.push(payload);
