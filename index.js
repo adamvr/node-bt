@@ -180,6 +180,16 @@ Connection.prototype.handshake = function () {
   this.push(this.opts.id, 'utf8');
 };
 
+Connection.prototype.have = function (pieceId) {
+  // Out of bounds piece id
+  if (pieceId < 0 || pieceId > 0xFFFFFFFF) return;
+
+  this.push(new Buffer([5, 4]));
+  var piece = new Buffer(4);
+  piece.writeUInt32BE(pieceId, 0);
+  this.push(piece);
+};
+
 Connection.prototype.bitfield = function (bitfield) {
   // Convert array bitfield to buffer
   if (!Buffer.isBuffer(bitfield)) bitfield = arrayToBitfield(bitfield);
