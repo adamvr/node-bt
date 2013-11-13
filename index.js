@@ -194,8 +194,6 @@ Connection.prototype.bitfield = function (bitfield) {
   // Convert array bitfield to buffer
   if (!Buffer.isBuffer(bitfield)) bitfield = arrayToBitfield(bitfield);
 
-  console.log(bitfield.toString('hex'));
-
   this.push(new Buffer([1 + bitfield.length, 5]));
   this.push(bitfield);
 };
