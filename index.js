@@ -110,6 +110,12 @@ Connection.prototype.parse_have = function (packet, payload) {
   packet.pieceId = payload.readUInt32BE(0);
 };
 
+Connection.prototype.parse_request = function (packet, payload) {
+  packet.index = payload.readUInt32BE(0);
+  packet.offset = payload.readUInt32BE(4);
+  packet.length = payload.readUInt32BE(8);
+};
+
 /**
  * Connection#parseHandshake - parse a handshake packet
  * @param {Buffer} data - buffer possibly containing handshake
@@ -202,6 +208,7 @@ var arrayToBitfield = function (bitArray) {
   var fieldLength = Math.ceil(bitArray.length / 8)
     , field = new Buffer(fieldLength);
 
+  // Zero unused bits
   field.fill(0);
 
   for (var i = 0, len = bitArray.length; i < len; i++) {
@@ -212,6 +219,19 @@ var arrayToBitfield = function (bitArray) {
   }
 
   return field;
+};
+
+Connection.prototype.request = function (index, begin, length) {
+  // Write header
+  this.push(new Buffer([13, 6]));
+
+  // Assemble payload
+  var payload = new Buffer(12);
+  payload.writeUInt32BE(index, 0);
+  payload.writeUInt32BE(begin, 4);
+  payload.writeUInt32BE(length, 8);
+
+  this.push(payload);
 };
 
 var bitfieldToArray = function (bitfield) {
