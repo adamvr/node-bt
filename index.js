@@ -75,10 +75,11 @@ Connection.prototype.parsePacket = function (data) {
     , packet = {};
 
   // Shelve packet until we get at least the length and type
-  if (pos + 2 > len) return -1;
+  if (pos + 5 > len) return -1;
 
   // Parse packet length
-  var length = data[pos++];
+  var length = data.readUInt32BE(0);
+  pos += 4;
 
   // Parse packet type
   packet.type = packetType[data[pos++]];
@@ -161,19 +162,19 @@ Connection.prototype.parseHandshake = function (data) {
 };
 
 Connection.prototype.choke = function () {
-  this.push(new Buffer([1, 0]));
+  this.push(new Buffer([0, 0, 0, 1, 0]));
 };
 
 Connection.prototype.unchoke = function () {
-  this.push(new Buffer([1, 1]));
+  this.push(new Buffer([0, 0, 0, 1, 1]));
 };
 
 Connection.prototype.interested = function () {
-  this.push(new Buffer([1, 2]));
+  this.push(new Buffer([0, 0, 0, 1, 2]));
 };
 
 Connection.prototype.uninterested = function () {
-  this.push(new Buffer([1, 3]));
+  this.push(new Buffer([0, 0, 0, 1, 3]));
 };
 
 Connection.prototype.handshake = function () {
@@ -190,9 +191,11 @@ Connection.prototype.have = function (pieceId) {
   // Out of bounds piece id
   if (pieceId < 0 || pieceId > 0xFFFFFFFF) return;
 
-  this.push(new Buffer([5, 4]));
+  this.push(new Buffer([0, 0, 0, 5, 4]));
+  // Assemble piece id
   var piece = new Buffer(4);
   piece.writeUInt32BE(pieceId, 0);
+  // Write it
   this.push(piece);
 };
 
@@ -200,7 +203,15 @@ Connection.prototype.bitfield = function (bitfield) {
   // Convert array bitfield to buffer
   if (!Buffer.isBuffer(bitfield)) bitfield = arrayToBitfield(bitfield);
 
-  this.push(new Buffer([1 + bitfield.length, 5]));
+  // Assemble header
+  var header = new Buffer(5);
+  header.writeUInt32BE(1 + bitfield.length, 0);
+  header.writeUInt8(5, 4);
+
+  // Send header
+  this.push(header);
+
+  // Send bitfield
   this.push(bitfield);
 };
 
@@ -223,7 +234,7 @@ var arrayToBitfield = function (bitArray) {
 
 Connection.prototype.request = function (index, begin, length) {
   // Write header
-  this.push(new Buffer([13, 6]));
+  this.push(new Buffer([0, 0, 0, 13, 6]));
 
   // Assemble payload
   var payload = new Buffer(12);
