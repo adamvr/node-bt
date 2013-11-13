@@ -123,6 +123,12 @@ Connection.prototype.parse_piece = function (packet, payload) {
   packet.piece = payload.slice(8);
 };
 
+Connection.prototype.parse_cancel = function (packet, payload) {
+  packet.index = payload.readUInt32BE(0);
+  packet.offset = payload.readUInt32BE(4);
+  packet.length = payload.readUInt32BE(8);
+};
+
 /**
  * Connection#parseHandshake - parse a handshake packet
  * @param {Buffer} data - buffer possibly containing handshake
@@ -268,6 +274,19 @@ Connection.prototype.piece = function (index, offset, piece) {
 
   // Write payload
   this.push(piece);
+};
+
+Connection.prototype.cancel = function (index, offset, length) {
+  // Write header
+  this.push(new Buffer([0, 0, 0, 13, 8]));
+
+  // Assemble payload
+  var payload = new Buffer(12);
+  payload.writeUInt32BE(index, 0);
+  payload.writeUInt32BE(offset, 4);
+  payload.writeUInt32BE(length, 8);
+
+  this.push(payload);
 };
 
 var bitfieldToArray = function (bitfield) {
