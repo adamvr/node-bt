@@ -14,7 +14,7 @@ var packetType = {
   8: 'cancel'
 };
 
-var Connection = function Connection (opts) {
+var Connection = module.exports = function Connection (opts) {
   var that = this;
 
   this.opts = opts;
