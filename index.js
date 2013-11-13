@@ -57,7 +57,7 @@ Connection.prototype.parse = function (data, done) {
     this.buffer = data.slice(0, read);
     // Continue parsing
     // TODO: do on next tick to avoid stack smashing
-    this.parse(this.data, done);
+    this.parse(this.buffer, done);
   } else {
     // All data used up
     this.buffer = null;
