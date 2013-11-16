@@ -189,14 +189,42 @@ Connection.prototype.uninterested = function () {
   this.push(new Buffer([0, 0, 0, 1, 3]));
 };
 
-Connection.prototype.handshake = function () {
-  var protocolName = 'BitTorrent protocol';
+Connection.prototype.handshake = function (protocolId, reserved, hash, clientId) {
+  if ('object' === typeof protocolId) {
+    var opts = protocolId;
+    return this.handshake(
+      opts.protocolId,
+      opts.reserved,
+      opts.hash,
+      opts.clientId
+    );
+  }
 
-  this.push(new Buffer([protocolName.length]));
-  this.push(protocolName, 'utf8');
-  this.push(new Buffer(8));
-  this.push(this.opts.hash, 'hex');
-  this.push(this.opts.id, 'utf8');
+  if (Buffer.byteLength(hash, 'hex') !== 20) throw new Error('Incorrect hash length');
+  if (Buffer.byteLength(clientId, 'utf8') !== 20) throw new Error('Incorrect id length');
+
+  var buffer = new Buffer(1 + protocolId.length + 8 + 20 + 20)
+    , pos = 0;
+
+  // Write protocol
+  buffer.writeUInt8(protocolId.length, pos);
+  pos += 1;
+  buffer.write(protocolId, 'utf8', pos);
+  pos += protocolId.length;
+
+  // Write reserved bytes
+  reserved.copy(buffer, pos);
+  pos += 8;
+
+  // Write hash
+  buffer.write(hash, 'hex', pos);
+  pos += 20;
+
+  // Write client id
+  buffer.write(clientId, 'utf8', pos);
+
+  // Transmit it
+  this.push(buffer);
 };
 
 Connection.prototype.have = function (pieceId) {
