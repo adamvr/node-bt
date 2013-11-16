@@ -17,7 +17,6 @@ var packetType = {
 var Connection = module.exports = function Connection (opts) {
   var that = this;
 
-  this.opts = opts;
   this.state = 'init';
   this.buffer = null;
 
@@ -151,7 +150,7 @@ Connection.prototype.parseHandshake = function (data) {
 
   if (pos >= len) return -1;
 
-  // Parse reserved bits
+  // Parse reserved bytes
   packet.reserved = data.slice(pos, pos + 8).toString('utf8');
   pos += 8;
 
