@@ -53,7 +53,7 @@ Connection.prototype.parse = function (data, done) {
   // Long write
   } else if (read < data.length) {
     // Remove used data from buffer
-    this.buffer = data.slice(0, read);
+    this.buffer = data.slice(read);
     // Continue parsing
     // TODO: do on next tick to avoid stack smashing
     this.parse(this.buffer, done);
