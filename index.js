@@ -156,7 +156,7 @@ Connection.prototype.parseHandshake = function (data) {
   if (pos >= len) return -1;
 
   // Parse reserved bytes
-  packet.reserved = data.slice(pos, pos + 8).toString('utf8');
+  packet.reserved = data.slice(pos, pos + 8);
   pos += 8;
 
   if (pos >= len) return -1;
