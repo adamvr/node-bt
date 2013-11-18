@@ -87,13 +87,14 @@ Connection.prototype.parsePacket = function (data) {
   if (pos + length - 1 > len) return -1;
 
   // Parse payload
-  this['parse_' + packet.type](packet, data.slice(pos, pos + length));
+  this['parse_' + packet.type](packet, data.slice(pos, pos + length - 1));
   pos += length;
 
   // Emit the packet
   this.emit(packet.type, packet);
 
-  return pos;
+  // Pos will be one byte after the last read byte
+  return pos - 1;
 };
 
 ['choke', 'unchoke', 'interested', 'uninterested'].forEach(function (t) {
