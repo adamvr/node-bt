@@ -258,23 +258,6 @@ Connection.prototype.bitfield = function (bitfield) {
   this.push(bitfield);
 };
 
-var arrayToBitfield = function (bitArray) {
-  var fieldLength = Math.ceil(bitArray.length / 8)
-    , field = new Buffer(fieldLength);
-
-  // Zero unused bits
-  field.fill(0);
-
-  for (var i = 0, len = bitArray.length; i < len; i++) {
-    var byteNum = Math.floor(i / 8)
-      , shift = i % 8;
-
-    field[byteNum] = field[byteNum] | bitArray[i] << (7 - shift);
-  }
-
-  return field;
-};
-
 Connection.prototype.request = function (index, offset, length) {
   // Write header
   this.push(new Buffer([0, 0, 0, 13, 6]));
@@ -330,4 +313,21 @@ var bitfieldToArray = function (bitfield) {
   }
 
   return bitArray;
+};
+
+var arrayToBitfield = function (bitArray) {
+  var fieldLength = Math.ceil(bitArray.length / 8)
+    , field = new Buffer(fieldLength);
+
+  // Zero unused bits
+  field.fill(0);
+
+  for (var i = 0, len = bitArray.length; i < len; i++) {
+    var byteNum = Math.floor(i / 8)
+      , shift = i % 8;
+
+    field[byteNum] = field[byteNum] | bitArray[i] << (7 - shift);
+  }
+
+  return field;
 };
