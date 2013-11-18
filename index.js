@@ -81,7 +81,7 @@ Connection.prototype.parsePacket = function (data) {
   pos += 4;
 
   // Parse packet type
-  packet.type = packetType[data[pos++]];
+  packet.type = packetType[data[pos++]] || 'unknown';
 
   // Shelve packet if we haven't got the whole length
   if (pos + length - 1 > len) return -1;
@@ -101,6 +101,10 @@ Connection.prototype.parsePacket = function (data) {
     return;
   }
 });
+
+Connection.prototype.parse_unknown = function (packet, payload) {
+  packet.payload = payload;
+};
 
 Connection.prototype.parse_bitfield = function (packet, payload) {
   packet.bitfield = bitfieldToArray(payload);
