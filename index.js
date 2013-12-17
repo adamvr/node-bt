@@ -179,18 +179,22 @@ Connection.prototype.parseHandshake = function (data) {
 
 Connection.prototype.choke = function () {
   this.push(new Buffer([0, 0, 0, 1, 0]));
+  return this;
 };
 
 Connection.prototype.unchoke = function () {
   this.push(new Buffer([0, 0, 0, 1, 1]));
+  return this;
 };
 
 Connection.prototype.interested = function () {
   this.push(new Buffer([0, 0, 0, 1, 2]));
+  return this;
 };
 
 Connection.prototype.uninterested = function () {
   this.push(new Buffer([0, 0, 0, 1, 3]));
+  return this;
 };
 
 Connection.prototype.handshake = function (protocolId, reserved, hash, clientId) {
@@ -229,6 +233,8 @@ Connection.prototype.handshake = function (protocolId, reserved, hash, clientId)
 
   // Transmit it
   this.push(buffer);
+
+  return this;
 };
 
 Connection.prototype.have = function (pieceId) {
@@ -241,6 +247,8 @@ Connection.prototype.have = function (pieceId) {
   piece.writeUInt32BE(pieceId, 0);
   // Write it
   this.push(piece);
+
+  return this;
 };
 
 Connection.prototype.bitfield = function (bitfield) {
@@ -257,6 +265,8 @@ Connection.prototype.bitfield = function (bitfield) {
 
   // Send bitfield
   this.push(bitfield);
+
+  return this;
 };
 
 Connection.prototype.request = function (index, offset, length) {
@@ -270,6 +280,8 @@ Connection.prototype.request = function (index, offset, length) {
   payload.writeUInt32BE(length, 8);
 
   this.push(payload);
+
+  return this;
 };
 
 Connection.prototype.piece = function (index, offset, piece) {
@@ -289,6 +301,8 @@ Connection.prototype.piece = function (index, offset, piece) {
 
   // Write payload
   this.push(piece);
+
+  return this;
 };
 
 Connection.prototype.cancel = function (index, offset, length) {
@@ -302,6 +316,8 @@ Connection.prototype.cancel = function (index, offset, length) {
   payload.writeUInt32BE(length, 8);
 
   this.push(payload);
+
+  return this;
 };
 
 var bitfieldToArray = function (bitfield) {
